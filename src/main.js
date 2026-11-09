@@ -53,7 +53,13 @@ function refreshStrips() {
 }
 
 function calculate() {
-  state.powered = solvePowered(readInput())
+  const inventory = Object.fromEntries(
+    [8, 12, 16, 24].map((width) => [
+      width,
+      document.getElementById(`powered-available-${width}`).value,
+    ])
+  )
+  state.powered = solvePowered(readInput(), inventory)
   refreshStrips()
 }
 
@@ -193,6 +199,9 @@ for (const width of WIDTHS) {
     })
   })
   sync()
+}
+for (const width of [8, 12, 16, 24]) {
+  document.getElementById(`powered-available-${width}`).addEventListener("input", calculate)
 }
 document.getElementById("fit-view").addEventListener("click", () => stage.fit())
 document.getElementById("rotate-board").addEventListener("click", () => {

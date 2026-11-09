@@ -38,33 +38,44 @@ const SLOT_ORDER = [
   ...Array.from({ length: SLOTS_PER_RAIL }, (_, i) => i),
 ]
 
-// Place as many as will fit. Returns how many were left over.
-function place(slots, width, count, powered) {
+// Place as many as will fit. Returns the unplaced count and unused inventory.
+function place(slots, width, count, powered, available) {
+  const capacity = available
   const span = POWERED_SPAN[width]
   for (const index of SLOT_ORDER) {
-    if (count <= 0) break
+    if (count <= 0 || available <= 0) break
     if (!canPlace(slots, index, span)) continue
     slots[index] = { width, role: "primary" }
     if (span === 2) slots[index + 1] = { width, role: "secondary" }
     powered[width] += 1
     count -= 1
+    available -= 1
   }
-  return count
+  return { leftover: count, available }
 }
 
-export function solvePowered(input) {
+export function solvePowered(input, inventory) {
   const counts = readCounts(input)
   const slots = Array(SLOT_COUNT).fill(null)
   const powered = { 8: 0, 12: 0, 16: 0, 24: 0 }
   const leftover = {}
+  const available = Object.fromEntries(
+    POWERED_ORDER.map((width) => [
+      width,
+      whole(inventory?.[width] ?? (inventory === undefined ? SLOT_COUNT : 0)),
+    ])
+  )
   for (const width of WIDTHS) leftover[width] = counts[width].total
 
   for (const width of POWERED_ORDER) {
-    const unmet = place(slots, width, counts[width].priority, powered)
-    leftover[width] = counts[width].total - counts[width].priority + unmet
+    const result = place(slots, width, counts[width].priority, powered, available[width])
+    available[width] = result.available
+    leftover[width] = counts[width].total - counts[width].priority + result.leftover
   }
   for (const width of POWERED_ORDER) {
-    leftover[width] = place(slots, width, leftover[width], powered)
+    const result = place(slots, width, leftover[width], powered, available[width])
+    available[width] = result.available
+    leftover[width] = result.leftover
   }
 
   return { slots, powered, leftover }

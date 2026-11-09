@@ -61,6 +61,26 @@ describe("powered feeders", () => {
     expect(result.leftover[32]).toBe(4)
     expect(result.leftover[8]).toBe(0)
   })
+
+  it("uses each powered feeder width only up to its available inventory", () => {
+    const result = solvePowered(
+      job({ 8: { total: 3, priority: 3 }, 12: { total: 4, priority: 0 } }),
+      { 8: 2, 12: 3, 16: 0, 24: 0 }
+    )
+    expect(result.powered[8]).toBe(2)
+    expect(result.powered[12]).toBe(3)
+    expect(result.leftover[8]).toBe(1)
+    expect(result.leftover[12]).toBe(1)
+  })
+
+  it("allows zero inventory and leaves unavailable widths for strip feeders", () => {
+    const input = job({ 8: { total: 2, priority: 2 }, 16: { total: 3, priority: 0 } })
+    const result = solvePowered(input, { 8: 0, 12: 0, 16: 1, 24: 0 })
+    expect(result.powered[8]).toBe(0)
+    expect(result.leftover[8]).toBe(2)
+    expect(result.powered[16]).toBe(1)
+    expect(result.leftover[16]).toBe(2)
+  })
 })
 
 describe("plates", () => {
